@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Modal/Card &middot; Publicação e Orquestração</title>
+<style>
+  :root{
+    --brad-red:#CC092F;
+    --brad-red-dark:#8C0620;
+    --brad-red-soft:#F04E5E;
+    --bg:#0E1116;
+    --panel:#161A21;
+    --panel-2:#1C212A;
+    --stroke:#262C37;
+    --txt:#E7EAF0;
+    --muted:#8C97A8;
+    --ok:#3FB950;
+    --warn:#E3B341;
+    --err:#FF6A6A;
+    --info:#58A6FF;
+    --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    --sans:"Segoe UI",system-ui,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);}
+  header{
+    background:linear-gradient(100deg,var(--brad-red-dark) 0%,var(--brad-red) 55%,var(--brad-red-soft) 100%);
+    padding:18px 26px;display:flex;align-items:center;gap:16px;
+    box-shadow:0 6px 24px rgba(204,9,47,.25);
+  }
+  .logo{width:42px;height:42px;border-radius:12px;background:#fff;display:grid;place-items:center;
+    color:var(--brad-red);font-weight:800;font-size:19px;letter-spacing:-1px;flex:none}
+  header h1{margin:0;font-size:19px;letter-spacing:.4px}
+  header p{margin:2px 0 0;font-size:12.5px;opacity:.9}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;padding:18px 26px 26px;align-items:start}
+  @media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;overflow:hidden}
+  .card h2{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);
+    padding:12px 16px;border-bottom:1px solid var(--stroke);background:var(--panel-2)}
+  .body{padding:16px}
+  label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
+  label:first-child{margin-top:0}
+  input[type=text],input[type=number],select{
+    width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--stroke);
+    background:#10141A;color:var(--txt);font-size:13px;font-family:var(--mono)}
+  input[type=file]{width:100%;font-size:12px;color:var(--muted)}
+  .file{border:1px dashed var(--stroke);border-radius:10px;padding:11px;background:#10141A}
+  .file b{display:block;font-size:12px;color:var(--txt);margin-bottom:6px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{
+    width:100%;margin-top:16px;padding:11px;border:0;border-radius:10px;cursor:pointer;
+    background:linear-gradient(95deg,var(--brad-red-dark),var(--brad-red));
+    color:#fff;font-weight:700;font-size:14px;letter-spacing:.3px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--stroke);color:var(--muted);font-weight:600;font-size:12px;margin-top:8px}
+  .term{background:#0A0D12;height:calc(100vh - 190px);min-height:420px;display:flex;flex-direction:column}
+  .termbar{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--stroke);background:var(--panel-2)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .termbar span{font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+  .out{flex:1;overflow:auto;padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+  .out .t{color:var(--brad-red-soft);font-weight:700}
+  .out .ok{color:var(--ok)} .out .warn{color:var(--warn)} .out .err{color:var(--err)}
+  .out .info{color:var(--info)} .out .mut{color:var(--muted)}
+  .out .ts{color:#4E5768}
+  .status{display:flex;gap:14px;padding:8px 16px;border-top:1px solid var(--stroke);background:var(--panel-2);font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+  .status b{color:var(--txt)}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">B</div>
+  <div>
+    <h1>Modal / Card &mdash; Análise de Imagens em Planilha</h1>
+    <p>CRM &middot; Publicação e Orquestração</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="card">
+    <h2>Configurações</h2>
+    <div class="body">
+      <div class="file"><b>Planilha (.xlsx)</b><input type="file" id="xlsx" accept=".xlsx"></div>
+      <div style="height:10px"></div>
+      <div class="file"><b>Imagem de pesquisa (opcional)</b><input type="file" id="img" accept="image/*"></div>
+
+      <label>Aba da planilha (vazio = todas)</label>
+      <input type="text" id="aba" placeholder="Ex.: Base Modal">
+
+      <div class="row">
+        <div>
+          <label>Distância máx. (hash)</label>
+          <input type="number" id="dist" value="10" min="0" max="64">
+        </div>
+        <div>
+          <label>Nitidez mínima</label>
+          <input type="number" id="nit" value="100" min="0">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Peso máx. (KB)</label>
+          <input type="number" id="peso" value="300" min="1">
+        </div>
+        <div>
+          <label>Exibir</label>
+          <select id="modo">
+            <option value="todas">Todas as imagens</option>
+            <option value="match">Somente semelhantes</option>
+            <option value="alerta">Somente com alerta</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="run" disabled>Executar análise</button>
+      <button class="ghost" id="clear">Limpar console</button>
+      <button class="ghost" id="save">Baixar log (.txt)</button>
+
+      <p class="hint">Roda 100% no seu navegador (Chrome/Edge). Nenhum arquivo sai da máquina, nenhuma instalação necessária.</p>
+    </div>
+  </section>
+
+  <section class="card term">
+    <div class="termbar">
+      <div class="dot" style="background:#FF5F57"></div>
+      <div class="dot" style="background:#FEBC2E"></div>
+      <div class="dot" style="background:#28C840"></div>
+      <span>console &mdash; modal_card.js</span>
+    </div>
+    <div class="out" id="out"></div>
+    <div class="status">
+      <div>Imagens: <b id="s1">0</b></div>
+      <div>Semelhantes: <b id="s2">0</b></div>
+      <div>Alertas: <b id="s3">0</b></div>
+      <div>Tempo: <b id="s4">0.0s</b></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------------- console ---------------- */
+const out=document.getElementById('out');
+const pad=n=>String(n).padStart(2,'0');
+function log(msg,cls){
+  const d=new Date(), line=document.createElement('div');
+  line.innerHTML='<span class="ts">['+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())+']</span> '+
+    '<span class="'+(cls||'')+'">'+String(msg).replace(/</g,'&lt;')+'</span>';
+  out.appendChild(line); out.scrollTop=out.scrollHeight;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+document.getElementById('clear').onclick=()=>out.innerHTML='';
+document.getElementById('save').onclick=()=>{
+  const b=new Blob([out.innerText],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='modal_card_log.txt';a.click();
+};
+
+/* ---------------- leitor de ZIP (xlsx) sem bibliotecas ---------------- */
+async function unzip(buf){
+  const dv=new DataView(buf), u8=new Uint8Array(buf);
+  let eocd=-1;
+  for(let i=u8.length-22;i>=0 && i>u8.length-66000;i--){ if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;} }
+  if(eocd<0) throw new Error('Arquivo .xlsx inválido (EOCD não encontrado)');
+  const total=dv.getUint16(eocd+10,true); let off=dv.getUint32(eocd+16,true);
+  const files={};
+  for(let i=0;i<total;i++){
+    const nLen=dv.getUint16(off+28,true), eLen=dv.getUint16(off+30,true), cLen=dv.getUint16(off+32,true);
+    const method=dv.getUint16(off+10,true), csize=dv.getUint32(off+20,true);
+    const lho=dv.getUint32(off+42,true);
+    const name=new TextDecoder().decode(u8.subarray(off+46,off+46+nLen));
+    const lN=dv.getUint16(lho+26,true), lE=dv.getUint16(lho+28,true);
+    const start=lho+30+lN+lE;
+    files[name]={method,data:u8.subarray(start,start+csize)};
+    off+=46+nLen+eLen+cLen;
+  }
+  return {
+    names:()=>Object.keys(files),
+    has:n=>!!files[n],
+    async bytes(n){
+      const f=files[n]; if(!f) return null;
+      if(f.method===0) return f.data;
+      const ds=new DecompressionStream('deflate-raw');
+      const ab=await new Response(new Blob([f.data]).stream().pipeThrough(ds)).arrayBuffer();
+      return new Uint8Array(ab);
+    },
+    async text(n){ const b=await this.bytes(n); return b?new TextDecoder().decode(b):null; }
+  };
+}
+
+/* ---------------- utilitários de planilha ---------------- */
+const colLetter=i=>{let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=(i-m-1)/26;}return s;};
+const X=t=>new DOMParser().parseFromString(t,'application/xml');
+const resolve=(base,target)=>{
+  let t=String(target||'').replace(/\\/g,'/');
+  if(t.startsWith('/')) return t.replace(/^\//,'');
+  const dir=base.replace(/[^/]*$/,'');
+  const st=[];
+  for(const q of (dir+t).split('/')){ if(q==='.'||q==='')continue; if(q==='..')st.pop(); else st.push(q); }
+  return st.join('/');
+};
+const tag=(el,n)=>Array.from(el.getElementsByTagName('*')).filter(e=>e.localName===n);
+
+async function readSharedStrings(zip){
+  const t=await zip.text('xl/sharedStrings.xml'); if(!t) return [];
+  return tag(X(t).documentElement,'si').map(si=>tag(si,'t').map(x=>x.textContent).join(''));
+}
+async function readSheetIndex(zip){
+  const wb=X(await zip.text('xl/workbook.xml'));
+  const rels=X(await zip.text('xl/_rels/workbook.xml.rels'));
+  const map={}; tag(rels.documentElement,'Relationship').forEach(r=>map[r.getAttribute('Id')]=r.getAttribute('Target'));
+  return tag(wb.documentElement,'sheet').map(s=>{
+    const id=s.getAttribute('r:id')||s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
+    return {name:s.getAttribute('name'),path:resolve('xl/workbook.xml',map[id]||'')};
+  });
+}
+async function readCells(zip,path,shared){
+  const t=await zip.text(path); if(!t) return {};
+  const cells={};
+  tag(X(t).documentElement,'c').forEach(c=>{
+    const r=c.getAttribute('r'), ty=c.getAttribute('t');
+    let v=tag(c,'v')[0]?tag(c,'v')[0].textContent:'';
+    if(ty==='s') v=shared[+v]||'';
+    else if(ty==='inlineStr') v=tag(c,'t').map(x=>x.textContent).join('');
+    if(r&&v!=='') cells[r]=v;
+  });
+  return cells;
+}
+function rowText(cells,row,maxCols){
+  const arr=[];
+  for(let i=0;i<maxCols;i++){const v=cells[colLetter(i)+row];if(v)arr.push(colLetter(i)+row+'="'+String(v).slice(0,60)+'"');}
+  return arr;
+}
+
+/* ---------------- imagem: métricas + hash ---------------- */
+async function loadBitmap(bytes,mime){
+  return await createImageBitmap(new Blob([bytes],{type:mime||'image/png'}));
+}
+function grayGrid(bmp,size){
+  const c=document.createElement('canvas');c.width=size;c.height=size;
+  const x=c.getContext('2d',{willReadFrequently:true});
+  x.drawImage(bmp,0,0,size,size);
+  const d=x.getImageData(0,0,size,size).data,g=new Float64Array(size*size);
+  for(let i=0;i<size*size;i++) g[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
+  return g;
+}
+function aHash(bmp){
+  const g=grayGrid(bmp,8);let m=0;for(const v of g)m+=v;m/=64;
+  let h='';for(const v of g)h+=v>m?'1':'0';return h;
+}
+function dHash(bmp){
+  const s=9,g=grayGrid(bmp,s);let h='';
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++)h+=g[y*s+x]>g[y*s+x+1]?'1':'0';
+  return h;
+}
+function hamming(a,b){let d=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])d++;return d;}
+function sharpness(bmp){
+  const n=64,g=grayGrid(bmp,n),lap=[];
+  for(let y=1;y<n-1;y++)for(let x=1;x<n-1;x++){
+    lap.push(4*g[y*n+x]-g[(y-1)*n+x]-g[(y+1)*n+x]-g[y*n+x-1]-g[y*n+x+1]);
+  }
+  const m=lap.reduce((a,b)=>a+b,0)/lap.length;
+  return lap.reduce((a,b)=>a+(b-m)*(b-m),0)/lap.length;
+}
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const ratio=(w,h)=>{const d=gcd(w,h);return (w/d)+':'+(h/d);};
+
+/* ---------------- execução ---------------- */
+const $=id=>document.getElementById(id);
+let xlsxFile=null,imgFile=null;
+$('xlsx').onchange=e=>{xlsxFile=e.target.files[0];$('run').disabled=!xlsxFile;
+  log('Planilha carregada: '+xlsxFile.name+' ('+(xlsxFile.size/1048576).toFixed(2)+' MB)','info');};
+$('img').onchange=e=>{imgFile=e.target.files[0];log('Imagem de pesquisa: '+imgFile.name,'info');};
+
+$('run').onclick=async()=>{
+  $('run').disabled=true;
+  const t0=performance.now();
+  let nImg=0,nMatch=0,nAlert=0;
+  const upd=()=>{$('s1').textContent=nImg;$('s2').textContent=nMatch;$('s3').textContent=nAlert;
+    $('s4').textContent=((performance.now()-t0)/1000).toFixed(1)+'s';};
+  try{
+    log('=== MODAL/CARD :: INÍCIO DA ANÁLISE ===','t');
+    const distMax=+$('dist').value, nitMin=+$('nit').value, pesoMax=+$('peso').value*1024;
+    const abaFiltro=$('aba').value.trim().toLowerCase(), modo=$('modo').value;
+
+    let refA=null,refD=null;
+    if(imgFile){
+      const b=new Uint8Array(await imgFile.arrayBuffer());
+      const bmp=await loadBitmap(b,imgFile.type);
+      refA=aHash(bmp);refD=dHash(bmp);
+      log('Referência: '+imgFile.name+' | '+bmp.width+'x'+bmp.height+' | '+(b.length/1024).toFixed(1)+' KB | nitidez '+sharpness(bmp).toFixed(1),'ok');
+    } else log('Nenhuma imagem de referência — modo inventário completo.','warn');
+
+    log('Abrindo pacote .xlsx...','mut');
+    const zip=await unzip(await xlsxFile.arrayBuffer());
+    const shared=await readSharedStrings(zip);
+    const sheets=await readSheetIndex(zip);
+    log('Abas encontradas: '+sheets.map(s=>s.name).join(', '),'info');
+
+    for(const sh of sheets){
+      if(abaFiltro && sh.name.toLowerCase()!==abaFiltro) continue;
+      const relPath=sh.path.replace(/([^/]+)$/,'_rels/$1.rels');
+      if(!zip.has(relPath)){log('Aba "'+sh.name+'": sem imagens vinculadas.','mut');continue;}
+      const rels=X(await zip.text(relPath));
+      const drawRel=tag(rels.documentElement,'Relationship').find(r=>(r.getAttribute('Target')||'').includes('drawing'));
+      if(!drawRel){log('Aba "'+sh.name+'": sem imagens vinculadas.','mut');continue;}
+
+      const drawPath=resolve(sh.path,drawRel.getAttribute('Target'));
+      const drels=X(await zip.text(drawPath.replace(/([^/]+)$/,'_rels/$1.rels')));
+      const media={}; tag(drels.documentElement,'Relationship').forEach(r=>
+        media[r.getAttribute('Id')]=resolve(drawPath,r.getAttribute('Target')));
+
+      const cells=await readCells(zip,sh.path,shared);
+      const doc=X(await zip.text(drawPath));
+      const anchors=Array.from(doc.documentElement.children);
+
+      log('','');
+      log('▶ ABA: '+sh.name+'  ('+anchors.length+' âncoras de imagem)','t');
+
+      for(const an of anchors){
+        const from=tag(an,'from')[0]; if(!from) continue;
+        const col=+tag(from,'col')[0].textContent, row=+tag(from,'row')[0].textContent;
+        const cel=colLetter(col)+(row+1);
+        const blip=tag(an,'blip')[0]; if(!blip) continue;
+        const rid=blip.getAttribute('r:embed')||blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','embed');
+        const path=media[rid]; if(!path) continue;
+        const bytes=await zip.bytes(path); if(!bytes) continue;
+
+        let bmp;
+        try{ bmp=await loadBitmap(bytes,'image/'+(path.split('.').pop()==='jpeg'?'jpeg':path.split('.').pop())); }
+        catch(e){ log('  ['+cel+'] formato não suportado pelo navegador: '+path.split('/').pop(),'err'); nAlert++; continue; }
+
+        nImg++;
+        const kb=bytes.length/1024, nit=sharpness(bmp);
+        const ah=aHash(bmp), dh=dHash(bmp);
+        let dist=null, match=false;
+        if(refA){ dist=Math.min(hamming(refA,ah),hamming(refD,dh)); match=dist<=distMax; if(match)nMatch++; }
+
+        const alerts=[];
+        if(bytes.length>pesoMax) alerts.push('peso acima de '+(pesoMax/1024).toFixed(0)+' KB');
+        if(nit<nitMin) alerts.push('nitidez baixa ('+nit.toFixed(1)+')');
+        if(alerts.length) nAlert++;
+
+        if(modo==='match' && !match) { upd(); continue; }
+        if(modo==='alerta' && !alerts.length) { upd(); continue; }
+
+        log('  ['+cel+'] '+path.split('/').pop(),match?'ok':'');
+        log('        dimensões: '+bmp.width+'x'+bmp.height+' px   proporção: '+ratio(bmp.width,bmp.height)+
+            '   peso: '+kb.toFixed(1)+' KB   nitidez: '+nit.toFixed(1),'mut');
+        log('        hash: '+ah.slice(0,16)+'…'+(dist!==null?('   distância: '+dist+(match?'  ✔ SEMELHANTE':'  ✘ diferente')):''),
+            dist===null?'mut':(match?'ok':'mut'));
+        const ctx=rowText(cells,row+1,12);
+        if(ctx.length) log('        linha '+(row+1)+': '+ctx.join(' | '),'info');
+        alerts.forEach(a=>log('        ⚠ '+a,'warn'));
+
+        upd();
+        if(nImg%15===0) await sleep(0);
+      }
+    }
+
+    log('','');
+    log('=== RELATÓRIO FINAL ===','t');
+    log('Imagens analisadas : '+nImg,'info');
+    log('Semelhantes        : '+nMatch,nMatch?'ok':'mut');
+    log('Com alerta         : '+nAlert,nAlert?'warn':'mut');
+    log('Tempo total        : '+((performance.now()-t0)/1000).toFixed(2)+'s','mut');
+    log('=== FIM ===','t');
+  }catch(err){
+    log('ERRO: '+err.message,'err');
+  }finally{ upd(); $('run').disabled=false; }
+};
+
+log('Console pronto. Selecione a planilha .xlsx para começar.','mut');
+</script>
+</body>
+</html>
