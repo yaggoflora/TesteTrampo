@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bradesco · Modal/Card Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Bibliotecas 100% client-side (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-accent-bar"></div>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-logo">B</div>
+        <div>
+          <div class="brand-eyebrow">Bradesco · CRM</div>
+          <div class="brand-title">Publicação e Orquestração</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Modal / Card Console
+        </span>
+        <span class="chip chip-offline" title="Roda 100% no navegador — nenhum servidor necessário">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          Offline
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1>Pesquisa de imagens em planilhas</h1>
+      <p>Automatize a busca de imagens duplicadas ou semelhantes em planilhas Excel, com verificação de descrição, vencimento e qualidade da imagem. Tudo processado no seu navegador — os arquivos não saem da sua máquina.</p>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="run" data-testid="tab-run">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Execução
+      </button>
+      <button class="tab" data-tab="history" data-testid="tab-history">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        Histórico
+      </button>
+    </div>
+
+    <section class="tab-panel" id="panel-run">
+      <div class="grid">
+        <div class="left-col">
+          <div class="card">
+            <div class="card-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cc092f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <h2>Arquivos</h2>
+            </div>
+
+            <div class="dropzone" id="dz-xlsx" data-testid="dropzone-xlsx">
+              <div class="dz-icon" id="dz-xlsx-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              </div>
+              <div class="dz-text">
+                <div class="dz-label">Planilha Excel</div>
+                <div class="dz-value" id="dz-xlsx-name">Arraste ou clique para selecionar</div>
+              </div>
+              <button class="dz-clear hidden" id="dz-xlsx-clear" data-testid="dropzone-xlsx-clear">×</button>
+              <input type="file" id="input-xlsx" accept=".xlsx,.xlsm" hidden data-testid="dropzone-xlsx-input" />
+            </div>
+
+            <div class="dropzone" id="dz-image" data-testid="dropzone-image">
+              <div class="dz-icon" id="dz-image-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="dz-text">
+                <div class="dz-label">Imagem de pesquisa</div>
+                <div class="dz-value" id="dz-image-name">Arraste ou clique para selecionar</div>
+              </div>
+              <button class="dz-clear hidden" id="dz-image-clear" data-testid="dropzone-image-clear">×</button>
+              <input type="file" id="input-image" accept="image/*" hidden data-testid="dropzone-image-input" />
+            </div>
+          </div>
+
+          <div class="card">
+            <button class="collapsible-trigger" id="btn-advanced-toggle" data-testid="advanced-toggle">
+              <span class="ct-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cc092f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
+                <h2>Parâmetros</h2>
+              </span>
+              <svg id="advanced-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="collapsible-content hidden" id="advanced-panel">
+              <div class="field">
+                <label>Nome da aba</label>
+                <input id="p-sheet" data-testid="input-sheet" value="Desconsiderados" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Col. Descrição</label>
+                  <input id="p-desc-col" data-testid="input-desc-col" value="B" maxlength="3" />
+                </div>
+                <div class="field">
+                  <label>Col. Vencimento</label>
+                  <input id="p-exp-col" data-testid="input-exp-col" value="F" maxlength="3" />
+                </div>
+              </div>
+              <div class="field">
+                <label>Similaridade mínima (%)</label>
+                <input id="p-min-sim" data-testid="input-min-sim" type="number" min="0" max="100" value="90" />
+              </div>
+              <div class="field">
+                <label>Dias de alerta (vírgula)</label>
+                <input id="p-alert-days" data-testid="input-alert-days" value="15,7,3,0" />
+              </div>
+              <div class="field">
+                <label>Limiar de nitidez</label>
+                <input id="p-sharp" data-testid="input-sharpness" type="number" value="500" />
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn-primary" id="btn-run" data-testid="btn-run" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              EXECUTAR
+            </button>
+            <button class="btn-outline hidden" id="btn-stop" data-testid="btn-stop">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+              INTERROMPER
+            </button>
+            <button class="btn-icon" id="btn-clear" data-testid="btn-clear" title="Limpar console">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+
+          <div class="card summary hidden" id="summary-card">
+            <div class="section-eyebrow">Resumo</div>
+            <div class="stats-grid">
+              <div><div class="stat-value stat-red" id="stat-total">0</div><div class="stat-label">Matches</div></div>
+              <div><div class="stat-value" id="stat-identical">0</div><div class="stat-label">Idênticas</div></div>
+              <div><div class="stat-value stat-amber" id="stat-similar">0</div><div class="stat-label">Semelhantes</div></div>
+            </div>
+            <button class="btn-outline btn-outline-red full" id="btn-export-csv" data-testid="btn-export-csv">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="terminal-wrap">
+          <div class="terminal-header">
+            <div class="terminal-header-left">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-amber"></span>
+              <span class="dot dot-green"></span>
+              <span class="terminal-path">modal-card@bradesco: ~/processamento</span>
+            </div>
+            <div class="terminal-header-right">
+              <span id="term-status" class="term-status hidden">
+                <span class="dot-live"></span> <span id="term-status-text">executando</span>
+              </span>
+              <span class="term-lines"><span id="term-lines-count">0</span> linhas</span>
+            </div>
+          </div>
+          <div class="terminal-body" id="terminal-output" data-testid="terminal-output">
+            <div class="log-line log-dim">$ Bradesco Modal/Card Console v2.0 (100% offline)</div>
+            <div class="log-line log-dim">$ Aguardando arquivos... selecione a planilha e a imagem, depois clique em EXECUTAR.</div>
+            <div class="log-line" id="idle-cursor"><span class="log-success">➜</span> <span class="log-info">console</span><span class="cursor-blink"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview dos matches (aparece após execução) -->
+      <div id="matches-preview" class="matches-preview hidden">
+        <div class="mp-header">
+          <div>
+            <h2>Preview dos matches</h2>
+            <p class="mp-hint">Clique em uma imagem para ampliar</p>
+          </div>
+          <span class="chip"><span id="mp-count-badge">0</span> encontrado(s)</span>
+        </div>
+        <div id="mp-grid" class="mp-grid"></div>
+      </div>
+    </section>
+
+    <section class="tab-panel hidden" id="panel-history">
+      <div class="history-header">
+        <div>
+          <h2>Últimas execuções</h2>
+          <p id="history-count">0 registro(s)</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-outline" id="btn-clear-history">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            Limpar tudo
+          </button>
+          <button class="btn-outline" id="btn-refresh-history" data-testid="btn-refresh-history">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Atualizar
+          </button>
+        </div>
+      </div>
+      <div id="history-list" class="history-list"></div>
+      <div id="history-empty" class="card empty hidden">Nenhuma execução registrada ainda.</div>
+    </section>
+
+    <footer class="app-footer">
+      <div class="brand-accent-bar footer-bar"></div>
+      Bradesco · CRM · Publicação e Orquestração · Modal/Card Console
+    </footer>
+  </main>
+
+  <div class="modal hidden" id="modal-detail">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel modal-panel-lg">
+      <div class="modal-header">
+        <h3>Detalhes da execução</h3>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="modal-lightbox">
+    <div class="modal-backdrop" data-close></div>
+    <div class="lightbox-content">
+      <button class="lightbox-close" data-close>×</button>
+      <img id="lightbox-img" alt="preview" />
+      <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="app.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"7f7b0fd8732c4326aae4b9d58d5c514a"}' crossorigin="anonymous"></script>
+</body>
+</html>
