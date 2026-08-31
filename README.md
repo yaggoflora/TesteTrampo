@@ -1,68 +1,120 @@
-# Bradesco · Modal/Card Console — HTML/CSS/JS puro
+# Verificador de Validade de Pastas
 
-Aplicação **100% no navegador** para o time de CRM Bradesco (Publicação e Orquestração)
-buscar imagens duplicadas ou semelhantes em planilhas Excel — sem servidor, sem instalar nada.
+Sistema web simples (HTML + CSS + Python/Flask) que verifica, em uma pasta de
+rede, quais subpastas cujo nome começa com **"Val"** têm uma data de validade
+**vencida há 3 meses ou mais**.
 
-## Arquivos
+Este sistema é **somente leitura**: em nenhum momento cria, altera, move ou
+exclui arquivos ou pastas. Ele apenas lê a estrutura de diretórios.
+
+## Como a busca funciona (importante)
+
+O sistema entra na pasta de rede informada e **percorre automaticamente
+todos os níveis de subpastas** dentro dela — não é preciso que as pastas
+"Val..." estejam logo no primeiro nível. Por exemplo, essa estrutura funciona
+normalmente:
 
 ```
-standalone/
-├── index.html   # abra este no navegador
-├── styles.css
-├── app.js
-└── README.md
+\\servidor\rede\
+├── Filial_SP\
+│   ├── Val_03.24        ← encontrada
+│   └── Val_09.26
+├── Filial_RJ\
+│   ├── Val_ATE_01.25     ← encontrada
+│   └── DocumentosGerais\
+└── Filial_MG\
+    └── Sub_Nivel_2\
+        └── Val_05.20    ← encontrada mesmo em um 3º nível
 ```
 
-## Como usar
+Assim que uma pasta "Val..." é identificada, o sistema não entra no conteúdo
+dela (não é necessário e evita varredura desnecessária em pastas de rede
+grandes).
 
-1. **Baixe** os 3 arquivos (`index.html`, `styles.css`, `app.js`) e coloque na mesma pasta
-2. **Duplo clique** em `index.html` (ou arraste pro navegador)
-3. Arraste a **planilha `.xlsx`** e a **imagem de pesquisa** para as áreas de upload
-4. (Opcional) Ajuste os **Parâmetros** (aba, colunas, similaridade mínima, etc.)
-5. Clique em **EXECUTAR** — o terminal ao lado mostra tudo em tempo real
-6. No final, veja o resumo à esquerda e clique em **Exportar CSV**
-7. Na aba **Histórico** você acompanha as últimas 100 execuções (salvas no `localStorage` do navegador)
+A leitura das pastas é feita **em paralelo** (várias pastas lidas ao mesmo
+tempo, não uma de cada vez), já que em uma pasta de rede o tempo gasto é
+principalmente de latência de rede, não de processamento. Isso reduz bastante
+o tempo total em compartilhamentos com muitas pastas. O número de leituras
+simultâneas pode ser ajustado em `scanner.py`, na constante
+`MAX_LEITURAS_PARALELAS` (padrão: 16).
 
-> Precisa de internet apenas na **primeira** abertura, para carregar as bibliotecas
-> `SheetJS` e `JSZip` via CDN. Depois, funciona offline.
-> Nenhum arquivo sai da sua máquina — todo o processamento é feito no navegador.
+## Regras usadas para identificar as pastas
 
-## Como funciona (por baixo dos panos)
+1. O nome da pasta precisa começar com `Val` (não diferencia maiúsculas de
+   minúsculas: `val`, `VAL`, `Val` etc. são aceitos).
+2. A validade é a **última ocorrência** de uma data no formato `MM.AA` ou
+   `MM.AAAA` encontrada no nome da pasta. Exemplos:
+   - `Val_08.26` → validade 08/2026
+   - `Val_02.09.26_ATE_11.26` → validade 11/2026 (última ocorrência)
+   - `Val_ATE_02.27` → validade 02/2027
+3. A pasta só aparece no resultado se a validade estiver vencida há **3 meses
+   ou mais**, contando corretamente a virada de ano (ex: validade 11/2025,
+   hoje fevereiro/2026 → 3 meses vencida).
 
-- **SheetJS** lê os valores da planilha (descrição, vencimento) já resolvendo células mescladas
-- **JSZip** desempacota o `.xlsx` (que é um zip) para extrair as imagens embutidas em `xl/media/` e ler os `drawings` que mapeiam cada imagem à sua célula
-- **pHash em JavaScript**: reduz cada imagem para 32×32 tons de cinza → DCT 2D → pega o quadrante 8×8 de baixa frequência → gera um hash de 64 bits
-- **Comparação por distância de Hamming**: se `distância == 0` → IDÊNTICA; se `similaridade >= mínima` → SEMELHANTE
-- **Nitidez** usa o mesmo kernel do PIL (`FIND_EDGES`) aplicado via `canvas` e retorna a variância das bordas
-- **Vencimento** usa `Date` do JS para classificar VENCIDA / VENCE HOJE / VENCE EM N DIAS / OK
-- **Histórico** vai pro `localStorage` (até 100 execuções, ~5MB)
-- **CSV** é gerado no cliente com `Blob` + `download` (`;` como separador, BOM UTF-8 pro Excel BR)
+## Estrutura do projeto
 
-## Parâmetros
+```
+verificador-validade/
+├── app.py              # Rotas web e da API (Flask)
+├── scanner.py          # Lógica de varredura das pastas (sem dependências web)
+├── requirements.txt    # Dependências Python
+├── README.md
+├── templates/
+│   └── index.html      # Página principal
+└── static/
+    ├── style.css        # Estilo visual
+    └── script.js        # Chamada da API e exibição dos resultados
+```
 
-| Campo | Padrão | Descrição |
-|---|---|---|
-| Nome da aba | `Desconsiderados` | Aba da planilha onde estão os cards |
-| Col. Descrição | `B` | Coluna da descrição da peça |
-| Col. Vencimento | `F` | Coluna da data de vencimento |
-| Similaridade mínima (%) | `75` | Match "semelhante" acima desse limiar |
-| Dias de alerta | `15,7,3,0` | Alerta quando faltam N dias |
-| Limiar de nitidez | `500` | Variância mínima de bordas para "boa nitidez" |
+## Como executar localmente
 
-## Compatibilidade
+### 1. Pré-requisitos
+- Python 3.9 ou superior instalado.
 
-Testado em Chrome, Edge e Firefox atuais.
-Para planilhas gigantes (3000+ imagens) pode levar alguns minutos — o navegador
-processa em segundo plano com "yields" para não travar a UI.
+### 2. Criar um ambiente virtual (recomendado)
 
-## Diferenças em relação ao script Python original
+```bash
+python -m venv venv
+```
 
-O algoritmo é o mesmo (pHash 32×32 → DCT → 8×8 → mediana), mas o resultado numérico
-pode variar em 1-2 bits em relação à `imagehash` do Python porque as bibliotecas
-de redimensionamento e DCT têm implementações ligeiramente diferentes. A tolerância
-de "similaridade mínima" (padrão 75%) absorve essa variação sem problemas.
+Ativar o ambiente:
+- **Windows:** `venv\Scripts\activate`
+- **Linux/macOS:** `source venv/bin/activate`
 
-## Créditos
+### 3. Instalar as dependências
 
-Feito pro Iago · CRM Bradesco · Publicação e Orquestração.
-Baseado no script Python original.
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Executar o sistema
+
+```bash
+python app.py
+```
+
+### 5. Acessar no navegador
+
+Abra: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+
+Digite o caminho da pasta de rede que deseja verificar, por exemplo:
+- Windows: `\\servidor\compartilhamento\pasta`
+- Linux/macOS (montagem de rede): `/mnt/rede/pasta`
+
+Clique em **Buscar**. O sistema mostrará uma tabela com nome, validade, meses
+vencida e caminho completo de cada pasta encontrada. Os resultados sempre
+aparecem na tela; o botão **Salvar log** é opcional e gera, além disso, um
+arquivo `.txt` com o mesmo conteúdo, e o botão **Exportar para Excel** gera
+uma planilha `.xlsx`.
+
+## Observações importantes
+
+- **Segurança:** por padrão, o servidor roda apenas em `127.0.0.1` (acessível
+  só na própria máquina). Só altere para `0.0.0.0` em `app.py` se realmente
+  precisar acessar de outros computadores da rede, e com cautela — essa
+  ferramenta permite listar caminhos de pastas informados por quem a usa.
+- **Erros de acesso:** se alguma subpasta não puder ser lida (permissão
+  negada, por exemplo), o sistema continua a varredura nas demais pastas e
+  mostra um aviso na tela, em vez de interromper tudo.
+- **Caminho inexistente:** se o caminho informado não existir ou não for uma
+  pasta, uma mensagem de erro clara é exibida.
